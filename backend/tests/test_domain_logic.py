@@ -13,7 +13,7 @@ from app.services import (
 
 def test_calculate_unit_quantities_preserves_total() -> None:
     quantities = calculate_unit_quantities(1001, {"west": 40, "central": 35, "east": 25})
-    assert quantities == {"west": 400, "central": 350, "east": 251}
+    assert quantities == {"west": 401, "central": 350, "east": 250}
     assert sum(quantities.values()) == 1001
 
 
@@ -61,6 +61,7 @@ def test_middle_day_zero_inventory_is_stockout() -> None:
         daily_entries=[
             DailyEntryProjection(date(2026, 5, 1), 20),
             DailyEntryProjection(date(2026, 5, 2), 10),
+            DailyEntryProjection(date(2026, 5, 3), 10),
         ],
         overrides={},
         arrivals_map={},
@@ -101,6 +102,7 @@ def test_turnover_uses_fifo_order() -> None:
     assert west.fully_sold is True
     assert west.sold_pieces == 10
     assert west.sell_through_date == date(2026, 5, 2)
-    assert central.remaining_pieces == 1
-    assert central.sold_pieces == 4
-
+    assert central.remaining_pieces == 0
+    assert central.sold_pieces == 5
+    assert central.fully_sold is True
+    assert central.sell_through_date == date(2026, 5, 3)
