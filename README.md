@@ -41,6 +41,15 @@ pip install -e .
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
+配置会优先读取仓库根目录的 `.env`，因此即使你在 `backend/` 目录里启动 `uvicorn`，也不会丢失根目录环境变量。
+
+默认不会在启动时自动建表。
+如果你希望在开发环境启动时自动执行 `Base.metadata.create_all()`，显式设置：
+
+```bash
+AUTO_INIT_MODELS=true uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
 ### 3. 启动前端
 
 ```bash
@@ -57,6 +66,23 @@ npm run dev
 - `/api/v1/sales-plans/{id}/chart-data`
 - `/api/v1/sales-plans/{id}/turnover`
 - `/api/v1/sales-plans/{id}/stockout-warnings`
+
+## Debian 上看到 `ConnectionRefusedError: [Errno 111]`
+
+这不是 FastAPI 本身的问题，而是 PostgreSQL 连接被拒绝了，常见原因只有两类：
+
+- `DATABASE_URL` 仍然指向默认的 `localhost:5432`，但本机 PostgreSQL 没启动。
+- PostgreSQL 在别的主机或端口上运行，`DATABASE_URL` 配错了。
+
+可以先检查：
+
+```bash
+echo $DATABASE_URL
+ss -ltn | grep 5432
+systemctl status postgresql
+```
+
+如果只是想先让 API 进程起来，不要开启 `AUTO_INIT_MODELS=true`。如果数据库本身不可达，依赖数据库的接口仍然会在请求时失败。
 
 ## 下一步建议
 

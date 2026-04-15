@@ -1,12 +1,16 @@
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+ROOT_DIR = Path(__file__).resolve().parents[2]
 
 
 class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/replenishment"
     REDIS_URL: str = "redis://localhost:6379/0"
+    AUTO_INIT_MODELS: bool = False
 
     APP_HOST: str = "0.0.0.0"
     APP_PORT: int = 8000
@@ -20,7 +24,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "change-me"
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(ROOT_DIR / ".env", ".env"),
         env_file_encoding="utf-8",
         extra="ignore",
     )
@@ -29,4 +33,3 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
-

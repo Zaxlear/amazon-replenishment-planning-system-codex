@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from datetime import date
 
 from fastapi import Depends, FastAPI, HTTPException, status
@@ -48,6 +49,7 @@ from app.services import (
 )
 
 settings = get_settings()
+logger = logging.getLogger(__name__)
 app = FastAPI(title="Amazon Replenishment Planning System", version="0.1.0")
 
 app.add_middleware(
@@ -61,8 +63,16 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup_event() -> None:
-    if settings.APP_ENV == "development":
-        await init_models()
+    if settings.AUTO_INIT_MODELS:
+        try:
+            await init_models()
+            logger.info("Database schema initialization completed.")
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("Database schema initialization failed.")
+            raise RuntimeError(
+                "AUTO_INIT_MODELS=true but database initialization failed. "
+                "Check DATABASE_URL or disable AUTO_INIT_MODELS."
+            ) from exc
 
 
 def _raise_service_error(exc: Exception) -> None:
@@ -292,4 +302,3 @@ async def stockout_warnings_endpoint(
         return await get_stockout_warnings(session, plan_id)
     except Exception as exc:  # noqa: BLE001
         _raise_service_error(exc)
-
