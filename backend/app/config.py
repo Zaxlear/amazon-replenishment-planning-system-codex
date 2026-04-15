@@ -1,0 +1,32 @@
+from functools import lru_cache
+
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/replenishment"
+    REDIS_URL: str = "redis://localhost:6379/0"
+
+    APP_HOST: str = "0.0.0.0"
+    APP_PORT: int = 8000
+    APP_ENV: str = "development"
+    DEBUG: bool = True
+    LOG_LEVEL: str = "INFO"
+
+    DATABASE_POOL_SIZE: int = 5
+    DATABASE_MAX_OVERFLOW: int = 10
+    CORS_ORIGINS: list[str] = Field(default_factory=lambda: ["http://localhost:5173"])
+    SECRET_KEY: str = "change-me"
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
+
